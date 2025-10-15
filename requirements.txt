@@ -6,3 +6,4 @@ joblib
 xgboost
 gunicorn
 torch
+flask_cors
