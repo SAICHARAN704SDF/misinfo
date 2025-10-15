@@ -7,3 +7,4 @@ xgboost
 gunicorn
 torch
 flask_cors
+transformers
