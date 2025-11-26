@@ -69,7 +69,7 @@ def load_artifacts():
         if os.path.exists(EMBEDDER_MODEL_PATH):
             model_name = joblib.load(EMBEDDER_MODEL_PATH)
             print(f">>> Loading embedder: {model_name}...")
-            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
             embedder = AutoModel.from_pretrained(model_name).to(DEVICE)
             print(f"✅ Embedder/Tokenizer loaded on {DEVICE}.")
         else:

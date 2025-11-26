@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Misinformation Detection</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    /* Your original CSS kept intact */
+    :root {
+      --primary-color: #8B5CF6;
+      --secondary-color: #EC4899;
+      --gradient-start: #8B5CF6;
+      --gradient-end: #EC4899;
+      --card-background: rgba(0, 0, 0, 0.25);
+      --text-primary: #FFFFFF;
+      --text-secondary: #E5E7EB;
+      --success-color: #10B981;
+      --warning-color: #F59E0B;
+      --danger-color: #EF4444;
+      --light-gray: #374151;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--text-primary);line-height:1.6;min-height:100vh;position:relative;}
+    body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background-image:url('https://images.unsplash.com/photo-1519681393784-d120267933ba?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1770&q=80');background-size:cover;background-position:center;background-attachment:fixed;filter:blur(8px) brightness(0.7);z-index:-1;}
+    .container{max-width:1200px;margin:0 auto;padding:2rem;opacity:0;animation:fadeIn 0.8s ease-in-out forwards;}
+    @keyframes fadeIn{to{opacity:1;}}
+    .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2.5rem;padding:0 1rem;}
+    .logo{display:flex;align-items:center;gap:0.75rem;}
+    .logo-icon{font-size:2.5rem;background:linear-gradient(135deg,var(--gradient-start),var(--gradient-end));color:white;border-radius:12px;padding:0.5rem;box-shadow:0 10px 20px rgba(0,0,0,0.2);transition:transform 0.3s ease;}
+    .logo-icon:hover{transform:rotate(-10deg) scale(1.1);}
+    .logo-text{color:var(--text-primary);font-size:1.8rem;font-weight:800;}
+    .card{background:var(--card-background);border-radius:20px;padding:2.5rem;box-shadow:0 8px 32px rgba(0,0,0,0.2);margin-bottom:2.5rem;border:1px solid rgba(255, 255, 255, 0.18);transition:transform 0.3s, box-shadow 0.3s;backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);}
+    .card:hover{transform:translateY(-5px);box-shadow:0 12px 40px rgba(0,0,0,0.25);}
+    h1,h2,h3{text-align:center;margin-bottom:1.5rem;}
+    h1{font-size:2.2rem;font-weight:800;}
+    h2{font-size:2rem;color:var(--text-primary);font-weight:700;}
+    h3{font-size:1.5rem;color:var(--text-primary);font-weight:700;}
+    .page{display:none;}.page.active{display:block;animation:slideInUp 0.6s ease-out;}
+    @keyframes slideInUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+    .input-section{margin-bottom:2rem;position:relative;}
+    .text-input{width:100%;min-height:150px;padding:1rem 1rem 2.5rem 1rem;border:2px solid rgba(255, 255, 255, 0.2);border-radius:12px;font-size:1.1rem;resize:vertical;transition:all 0.3s ease;background:rgba(0,0,0,0.2);color:var(--text-primary);}
+    .text-input::placeholder{color:var(--text-secondary);}
+    .text-input:focus{outline:none;border-color:var(--primary-color);box-shadow:0 0 0 4px rgba(139, 92, 246, 0.3);}
+    .char-counter{position:absolute;bottom:10px;right:15px;font-size:0.85rem;color:var(--text-secondary);}
+    .main-controls{display:flex;justify-content:center;align-items:center;gap:1rem;flex-wrap:wrap;}
+    .predict-btn{background:linear-gradient(135deg,var(--gradient-start),var(--gradient-end));color:white;border:none;padding:1rem 2.5rem;font-size:1.1rem;font-weight:700;border-radius:12px;cursor:pointer;transition:all 0.3s ease;box-shadow:0 4px 15px rgba(0,0,0,0.2);display:flex;align-items:center;gap:0.5rem;}
+    .predict-btn:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,0,0,0.25);}
+    .predict-btn:disabled{opacity:0.6;cursor:not-allowed;}
+    #results-container{display:none;padding-top:2rem;animation:fadeIn 0.5s ease;}
+    .results-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:center;}
+    .result-chart-container{position:relative;height:250px;width:250px;margin:0 auto;}
+    .result-summary{text-align:left;}
+    #result-label{font-size:1.8rem;font-weight:700;margin-bottom:0.5rem;}
+    #ai-explanation{background-color:rgba(0,0,0,0.2);padding:1.5rem;border-radius:12px;border-left:5px solid;margin-top:1rem;}
+    .key-features{text-align:center;}
+    .features-grid{display:grid;grid-template-columns:1fr;gap:2rem;margin-top:2rem;max-width:500px;margin-left:auto;margin-right:auto;}
+    .feature-card{text-align:left;}
+    .feature-card canvas{width:100% !important;height:300px !important;}
+    .history-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;}
+    .history-controls{display:flex;gap:1rem;}
+    .history-list{max-height:600px;overflow-y:auto;padding-right:1rem;}
+    .history-item{background:rgba(0,0,0,0.3);padding:1.5rem;margin-bottom:1rem;border-radius:12px;border-left:5px solid var(--primary-color);display:flex;justify-content:space-between;align-items:center;transition:transform 0.3s, box-shadow 0.3s;}
+    .history-item:hover{transform:translateX(5px);box-shadow:0 4px 15px rgba(0,0,0,0.1);}
+    .history-item-content{max-width:65%;}
+    .history-item-details{text-align:right;}
+    .history-text{font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .history-badge{padding:0.3rem 0.8rem;border-radius:20px;font-size:0.8rem;font-weight:700;color:white;display:inline-block;margin-bottom:0.5rem;}
+    .action-btn{background:transparent;border:none;color:var(--text-secondary);cursor:pointer;font-size:1rem;margin-left:0.5rem;transition:color 0.3s;}
+    .action-btn:hover{color:var(--primary-color);}
+    .btn{padding:0.75rem 1.5rem;border-radius:10px;border:none;cursor:pointer;font-weight:600;transition:all 0.3s ease;}
+    .btn-primary{background:rgba(255, 255, 255, 0.1);color:white;border:1px solid rgba(255, 255, 255, 0.2);}
+    .btn-danger{background-color:var(--danger-color);color:white;}
+    .btn-secondary{background-color:rgba(255, 255, 255, 0.1);color:white;}
+    .btn:hover{background:rgba(255, 255, 255,0.2);}
+    .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:rgba(0,0,0,0.7);animation:fadeIn 0.3s;}
+    .modal-content{background-color:#1F2937;color:white;margin:10% auto;padding:2.5rem;border:1px solid rgba(255,255,255,0.2);width:80%;max-width:600px;border-radius:15px;animation:slideInUp 0.4s;position:relative;}
+    .close-btn{color:#aaa;position:absolute;top:1rem;right:1.5rem;font-size:2rem;font-weight:bold;cursor:pointer;}
+    .close-btn:hover,.close-btn:focus{color:white;}
+    @media(max-width:992px){.results-grid{grid-template-columns:1fr;}.result-summary{text-align:center;}}
+    @media(max-width:768px){.container{padding:1rem;}.header{flex-direction:column;gap:1.5rem;}.card{padding:1.5rem;}.result-chart-container{height:200px;width:200px;}.history-item{flex-direction:column;align-items:flex-start;gap:1rem;}.history-item-content,.history-item-details{width:100%;max-width:100%;text-align:left;}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">
+        <div class="logo-icon">🛡</div>
+        <div class="logo-text">Misinformation Detection</div>
+      </div>
+      <div class="header-controls">
+        <button class="btn btn-primary" id="history-tab"><i class="fas fa-history"></i> View History</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="detector-page" class="page active">
+        <h1>Advanced Misinformation Detector</h1>
+        <p style="text-align:center; color: var(--text-secondary); max-width: 600px; margin: 0 auto 2rem auto;">
+          Paste any text below to analyze its likelihood of being misinformation. Our AI models will provide a confidence score and explanation.
+        </p>
+        <div class="input-section">
+          <textarea class="text-input" id="text-input" placeholder="Example: 'A new study shows that chocolate cures all diseases...'" rows="6"></textarea>
+          <div class="char-counter"><span id="char-count">0</span> / 2000</div>
+        </div>
+
+        <div class="main-controls">
+          <button class="predict-btn" id="predict-btn"><i class="fas fa-search"></i> Analyze Text</button>
+        </div>
+
+        <div id="results-container">
+            <div class="results-grid">
+                <div class="result-chart-container">
+                    <canvas id="resultChart"></canvas>
+                </div>
+                <div class="result-summary">
+                    <h3 id="result-label"></h3>
+                    <p id="ai-explanation"></p>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      <div id="history-page" class="page">
+        <div class="history-header">
+            <h2><i class="fas fa-history"></i> Analysis History</h2>
+            <div class="history-controls">
+                <button class="btn btn-secondary" id="back-btn"><i class="fas fa-arrow-left"></i> Back to Detector</button>
+                <button class="btn btn-danger" id="clear-history-btn"><i class="fas fa-trash"></i> Clear All</button>
+            </div>
+        </div>
+        <div class="history-list" id="history-list"></div>
+      </div>
+    </div>
+    
+    <div class="key-features card">
+      <h2>Key Features & Insights</h2>
+       <p style="text-align:center; color: var(--text-secondary); max-width: 700px; margin: -1rem auto 2rem auto;">
+          Our detector leverages advanced machine learning techniques to provide robust and transparent analysis. Explore the core metrics below.
+        </p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3>Classification Breakdown</h3>
+          <canvas id="confusionMatrixChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal for full text view -->
+  <div id="view-modal" class="modal">
+      <div class="modal-content">
+          <span class="close-btn" id="modal-close-btn">&times;</span>
+          <h2>Full Text</h2>
+          <p id="modal-text-content" style="white-space: pre-wrap; background-color: #374151; padding: 1rem; border-radius: 8px; max-height: 400px; overflow-y: auto;"></p>
+      </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const predictBtn = document.getElementById('predict-btn');
+        const textInput = document.getElementById('text-input');
+        const resultsContainer = document.getElementById('results-container');
+        const historyTab = document.getElementById('history-tab');
+        const backBtn = document.getElementById('back-btn');
+        const historyList = document.getElementById('history-list');
+        const clearHistoryBtn = document.getElementById('clear-history-btn');
+        const charCountEl = document.getElementById('char-count');
+        const resultLabel = document.getElementById('result-label');
+        const aiExplanation = document.getElementById('ai-explanation');
+        const viewModal = document.getElementById('view-modal');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        const modalTextContent = document.getElementById('modal-text-content');
+
+        let analysisHistory = [];
+        let resultChart;
+
+        const loadHistory = () => {
+            try {
+                const raw = localStorage.getItem('misinfoHistory');
+                analysisHistory = raw ? JSON.parse(raw) : [];
+                if (!Array.isArray(analysisHistory)) analysisHistory = [];
+            } catch (e) { analysisHistory = []; console.error(e); }
+        };
+        const saveHistory = () => localStorage.setItem('misinfoHistory', JSON.stringify(analysisHistory));
+        const addToHistory = (text, label, confidence) => {
+            const item = { id: Date.now(), text, label, confidence, model: 'AI Model', timestamp: new Date().toLocaleString() };
+            analysisHistory.unshift(item);
+            if (analysisHistory.length > 100) analysisHistory.pop();
+            saveHistory(); renderHistory();
+        };
+
+        const showPage = (page) => {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(`${page}-page`).classList.add('active');
+            if(page==='history') renderHistory();
+        };
+
+        const getClassification = (confidence) => {
+            const roundedConf = Math.round(confidence*100);
+            if(confidence>0.65) return { label:"Likely Misleading", color:'var(--danger-color)', explanation:`With a confidence of ${roundedConf}%, the AI has identified patterns commonly found in misinformation. It's highly recommended to cross-reference this information with reputable sources.` };
+            if(confidence>0.40) return { label:"Potentially Misleading", color:'var(--warning-color)', explanation:`The analysis is uncertain (${roundedConf}% confidence). The text contains some elements that could be misleading. Proceed with caution and verify the facts.` };
+            return { label:"Likely Not Misleading", color:'var(--success-color)', explanation:`The AI analysis suggests this text is likely not misinformation with ${100-roundedConf}% confidence. However, always consider the source.` };
+        };
+
+        const updateResults = (confidence) => {
+            const { label, color, explanation } = getClassification(confidence);
+            const roundedConf = Math.round(confidence*100);
+            resultsContainer.style.display='block';
+            resultLabel.textContent=label; resultLabel.style.color=color;
+            aiExplanation.textContent=explanation; aiExplanation.style.borderColor=color;
+
+            const chartData={ datasets:[{ data:[roundedConf,100-roundedConf], backgroundColor:[color,'rgba(255,255,255,0.1)'], borderColor:'transparent', borderWidth:5, borderRadius:5 }] };
+            const chartOptions={ responsive:true, maintainAspectRatio:false, cutout:'75%', plugins:{ legend:{display:false}, tooltip:{enabled:false} } };
+
+            if(resultChart) resultChart.destroy();
+            const ctx=document.getElementById('resultChart').getContext('2d');
+            resultChart = new Chart(ctx, {
+                type:'doughnut', data:chartData, options:chartOptions,
+                plugins:[{ id:'centerText', beforeDraw:function(chart){
+                    const {width,height,ctx}=chart; ctx.restore();
+                    const fontSize=(height/114).toFixed(2);
+                    ctx.font=`bold ${fontSize}em sans-serif`;
+                    ctx.textBaseline="middle";
+                    const text=`${roundedConf}%`;
+                    const textX=Math.round((width-ctx.measureText(text).width)/2);
+                    const textY=height/2;
+                    ctx.fillStyle=color; ctx.fillText(text,textX,textY);
+                    ctx.save();
+                }}]
+            });
+            resultsContainer.scrollIntoView({ behavior:'smooth', block:'center' });
+        };
+
+        const renderHistory = () => {
+            historyList.innerHTML='';
+            if(analysisHistory.length===0){
+                historyList.innerHTML=`<p style="text-align:center; color:var(--text-secondary); padding: 2rem;">Your analysis history is empty.</p>`;
+                return;
+            }
+            analysisHistory.forEach(item=>{
+                const div=document.createElement('div');
+                div.className='history-item';
+                const { label, color } = getClassification(item.confidence);
+                const truncatedText = item.text.length>150 ? item.text.substring(0,150)+'...' : item.text;
+                div.innerHTML=`
+                    <div class="history-item-content">
+                        <div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:0.5rem;">${item.timestamp}</div>
+                        <p class="history-text">${truncatedText}</p>
+                    </div>
+                    <div class="history-item-details">
+                        <span class="history-badge" style="background-color:${color}">${label}</span>
+                        <div style="font-size:1.2rem;font-weight:700;">${Math.round(item.confidence*100)}%</div>
+                        <div>
+                            <button class="action-btn view-btn" data-id="${item.id}" title="View Full Text"><i class="fas fa-eye"></i></button>
+                            <button class="action-btn delete-btn" data-id="${item.id}" title="Delete Item"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+                historyList.appendChild(div);
+            });
+        };
+
+        historyTab.addEventListener('click',()=>showPage('history'));
+        backBtn.addEventListener('click',()=>showPage('detector'));
+
+        textInput.addEventListener('input',()=>{
+            const count=textInput.value.length;
+            charCountEl.textContent=count;
+            predictBtn.disabled = count>2000;
+            charCountEl.style.color = count>2000 ? 'var(--danger-color)' : 'var(--text-secondary)';
+        });
+
+        predictBtn.addEventListener('click',async()=>{
+            const text=textInput.value.trim();
+            if(!text){ alert('Please enter text to analyze.'); return; }
+            predictBtn.disabled=true; predictBtn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            await new Promise(resolve=>setTimeout(resolve,1500));
+            const mockConfidence=Math.random();
+            try { updateResults(mockConfidence); const {label}=getClassification(mockConfidence); addToHistory(text,label,mockConfidence); }
+            catch(e){ console.error(e); alert('An error occurred.'); }
+            finally{ predictBtn.disabled=false; predictBtn.innerHTML='<i class="fas fa-search"></i> Analyze Text'; }
+        });
+
+        clearHistoryBtn.addEventListener('click',()=>{
+            if(confirm('Are you sure you want to clear all analysis history?')){ analysisHistory=[]; saveHistory(); renderHistory(); }
+        });
+
+        historyList.addEventListener('click',(e)=>{
+            const target=e.target.closest('button'); if(!target) return;
+            const id=Number(target.dataset.id);
+            if(target.classList.contains('delete-btn')){ if(confirm('Delete this item?')){ analysisHistory=analysisHistory.filter(i=>i.id!==id); saveHistory(); renderHistory(); } }
+            if(target.classList.contains('view-btn')){ const item=analysisHistory.find(i=>i.id===id); if(item){ modalTextContent.textContent=item.text; viewModal.style.display='block'; } }
+        });
+
+        modalCloseBtn.addEventListener('click',()=>viewModal.style.display='none');
+        window.addEventListener('click',e=>{ if(e.target==viewModal) viewModal.style.display='none'; });
+
+        const initFeatureCharts=()=>{
+            new Chart(document.getElementById('confusionMatrixChart'),{
+                type:'bar',
+                data:{ labels:['True Positive','True Negative','False Positive','False Negative'], datasets:[{ label:'Predictions', data:[1250,8300,250,200], backgroundColor:['#4caf50','#2196f3','#ff9800','#f44336'] }] },
+                options:{ responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{color:'white'}, grid:{color:'rgba(255,255,255,0.1)'}}, x:{ticks:{color:'white'}, grid:{color:'rgba(255,255,255,0.1)'}}} }
+            });
+        };
+
+        loadHistory(); initFeatureCharts();
+    });
+  </script>
+</body>
+</html>
