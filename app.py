@@ -10,8 +10,7 @@ import torch
 import numpy as np
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-# NEW: Hugging Face imports for mDeberta embedding
-from transformers import AutoTokenizer, AutoModel
+# Hugging Face imports moved to load_artifacts for lazy loading
 
 app = Flask(__name__)
 CORS(app)
@@ -32,7 +31,8 @@ model_rf = None
 model = None # 'model' will be ensemble_model
 tokenizer = None
 embedder = None
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+models_loaded = False  # Flag to check if models are loaded
+DEVICE = "cpu"  # Force CPU to save RAM
 MAX_LEN = 128 # Must match training script
 print(f"Inference device: {DEVICE}")
 
@@ -60,11 +60,16 @@ def get_mdeberta_embedding(text):
     embedding = outputs.last_hidden_state[:, 0, :].cpu().numpy()
     return embedding # Returns a numpy array of shape (1, 768)
 
-# ----------------- Load Artifacts -----------------
+# ----------------- Load Artifacts (Lazy Loading) -----------------
 def load_artifacts():
     """Load model(s), tokenizer, and embedder safely."""
-    global model_lr, model_rf, model, tokenizer, embedder
+    global model_lr, model_rf, model, tokenizer, embedder, models_loaded
+    if models_loaded:
+        return  # Already loaded
     try:
+        # Import transformers here for lazy loading
+        from transformers import AutoTokenizer, AutoModel
+
         # Load mDeberta components
         if os.path.exists(EMBEDDER_MODEL_PATH):
             model_name = joblib.load(EMBEDDER_MODEL_PATH)
@@ -85,12 +90,10 @@ def load_artifacts():
         if os.path.exists(MODEL_ENSEMBLE): # Load the ensemble model into 'model' global
             model = joblib.load(MODEL_ENSEMBLE)
             print("✅ Ensemble model loaded.")
-
+        models_loaded = True
     except Exception as e:
         print("❌ Error loading artifacts:", e)
         traceback.print_exc()
-
-load_artifacts()
 
 
 # ----------------- Translator (Removed for simplicity) -----------------
@@ -118,6 +121,9 @@ def home():
 def predict():
     """Predict misinformation likelihood using mDeberta embeddings."""
     global model_lr, model_rf, model, tokenizer, embedder
+
+    if not models_loaded:
+        load_artifacts()
 
     data = request.get_json(force=True)
     text = data.get("text", "")
