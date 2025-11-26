@@ -69,7 +69,7 @@ def load_artifacts():
         if os.path.exists(EMBEDDER_MODEL_PATH):
             model_name = joblib.load(EMBEDDER_MODEL_PATH)
             print(f">>> Loading embedder: {model_name}...")
-            tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
             embedder = AutoModel.from_pretrained(model_name).to(DEVICE)
             print(f"✅ Embedder/Tokenizer loaded on {DEVICE}.")
         else:
@@ -93,14 +93,9 @@ def load_artifacts():
 load_artifacts()
 
 
-# ----------------- Translator (Same) -----------------
-try:
-    from googletrans import Translator
-    translator = Translator()
-    print("🌐 Translator ready.")
-except Exception:
-    translator = None
-    print("⚠️ googletrans not installed — translation disabled.")
+# ----------------- Translator (Removed for simplicity) -----------------
+translator = None
+print("Translation disabled.")
 
 # ----------------- Utility Functions (Same) -----------------
 def map_confidence_to_label(prob):
