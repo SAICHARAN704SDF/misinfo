@@ -8,6 +8,4 @@ gunicorn
 torch
 flask-cors
 transformers
-tiktoken
 protobuf
-streamlit
