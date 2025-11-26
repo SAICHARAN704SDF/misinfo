@@ -1,5 +1,5 @@
 flask
-scikit-learn
+scikit-learn==1.7.2
 pandas
 numpy
 joblib
@@ -10,5 +10,4 @@ flask-cors
 transformers
 tiktoken
 protobuf
-scikit-learn==1.7.2
 streamlit
