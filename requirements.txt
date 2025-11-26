@@ -10,4 +10,4 @@ flask-cors
 transformers
 tiktoken
 protobuf
-googletrans==4.0.0rc1
+scikit-learn==1.7.2
