@@ -1,60 +1,33 @@
-# Misinformation Detection API
+AURORA – Multilingual Misinformation Detection API
+PROMOD Task 3 – FIRE 2025 (IIT BHU, Varanasi)
+AURORA is a Flask-based misinformation detection system developed specifically for PROMOD Sub-Task 3 at the Forum for Information Retrieval Evaluation (FIRE) 2025, hosted by IIT BHU Varanasi.
+The system focuses on identifying misinformation in multilingual, highly imbalanced social media posts, providing both predictions and confidence scores. It integrates transformer-based embeddings with classical ML models and an interactive web interface for real-time claim verification.
 
-A Flask-based web API for detecting misinformation in text using machine learning models trained on mDeberta embeddings.
+ Purpose of the Project
+The primary goal of AURORA is to support the PROMOD challenge by:
+Building a generalizable multilingual misinformation classifier
+Handling imbalanced crisis-related datasets (e.g., Russia–Ukraine)
+Enabling fast, confidence-aware predictions
+Providing an accessible web dashboard to test claims instantly
+This project demonstrates practical misinformation detection using modern NLP techniques and can be extended to real-time moderation, journalism, and policy applications.
 
-## Features
 
-- **Text Analysis**: Analyze text for misinformation likelihood using Logistic Regression, Random Forest, or Ensemble models.
-- **Translation Support**: Optional translation to English using Google Translate.
-- **Web Interface**: User-friendly HTML interface for easy interaction.
-- **Feedback Reporting**: Collect user feedback on predictions.
+Installation
+1. Clone the Repository
+git clone https://github.com/SAICHARAN704SDF/misinfo.git
+cd misinfo
 
-## Models Used
+Install Dependencies
+pip install -r requirements.txt
 
-- Embeddings: mDeberta-v3-base (via Hugging Face Transformers)
-- Classifiers: Logistic Regression, Random Forest, Voting Classifier Ensemble
+Run the Application
+python app.py
 
-## Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/SAICHARAN704SDF/misinfo.git
-   cd misinfo
-   ```
-
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. Run the app:
-   ```bash
-   python app.py
-   ```
-   The app will be available at `http://127.0.0.1:5000`.
-
-## Deployment on Render
-
-1. Connect your GitHub repository to Render.
-2. Create a new Web Service with the following settings:
-   - **Runtime**: Python 3
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `gunicorn app:app`
-3. Deploy and access your live API.
-
-## API Endpoints
-
-- `GET /`: Serves the web interface.
-- `POST /predict`: Predicts misinformation likelihood.
-  - Body: `{"text": "your text here", "model": "lr|rf|ensemble", "translate": false}`
-- `POST /report`: Reports feedback.
-  - Body: `{"text": "...", "model_used": "...", "confidence": 0.5, "user_label": "...", "notes": "..."}`
-
-## Requirements
-
-- Python 3.9+
-- Libraries: See `requirements.txt`
-
-## License
-
-[Add your license here]
+MIT License
+Copyright (c) 2025
+Charan Kailasa
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the “Software”), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software…
